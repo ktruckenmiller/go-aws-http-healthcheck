@@ -1,0 +1,8 @@
+github.com/aws/aws-sdk-go v1.19.2 h1:An2AooOK+jV8If+fthMTZ4pXmax6FZQt178H5VNUef8=
+github.com/aws/aws-sdk-go v1.19.2/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
+github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
+github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
+github.com/tcnksm/go-httpstat v0.1.1-0.20170410140047-fae40520f4ba h1:6DEgUE/VKLNuoI19+YocHWkQ6O/Jk//k14dl5RaOXBw=
+github.com/tcnksm/go-httpstat v0.1.1-0.20170410140047-fae40520f4ba/go.mod h1:s3JVJFtQxtBEBC9dwcdTTXS9xFnM3SXAZwPG41aurT8=
+github.com/tcnksm/go-httpstat v0.2.0 h1:rP7T5e5U2HfmOBmZzGgGZjBQ5/GluWUylujl0tJ04I0=
+github.com/tcnksm/go-httpstat v0.2.0/go.mod h1:s3JVJFtQxtBEBC9dwcdTTXS9xFnM3SXAZwPG41aurT8=
