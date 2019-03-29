@@ -1,0 +1,40 @@
+---
+kind: pipeline
+name: default
+
+steps:
+  - name: build-docker
+    image: plugins/docker
+    depends_on: [ clone ]
+    settings:
+      repo: ktruckenmiller/aws-http-healthcheck
+      tags: latest
+      username:
+        from_secret: username
+      password:
+        from_secret: password
+      when:
+        branch: [master]
+        event: [push]
+
+  - name: build-linux
+    image: golang
+    depends_on: [ clone ]
+    environment:
+      GO111MODULE: on
+      CGO_ENABLED: 0
+      GOOS: linux
+      GOARCH: amd64
+    commands:
+      - go mod download
+      - go build -ldflags="-w -s" -o healthcheck
+
+  - name: upload-linux
+    image: plugins/s3
+    depends_on: [ build-linux ]
+    settings:
+      bucket: kloudcover-tools
+      acl: public-read
+      region: us-west-2
+      source: healthcheck
+      target: /binaries

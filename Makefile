@@ -16,6 +16,7 @@ develop: build-develop
 	-e AWS_REGION=us-west-2 \
 	-e IAM_ROLE \
 	aws_app_health sh
+	#URL=https://my-ip.clustermaestro.com REGION=us-east-1 METRIC_NAME=boston go run main.go
 
 build-develop:
 	docker build -t aws_app_health --target BUILDER .
