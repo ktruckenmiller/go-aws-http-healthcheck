@@ -29,12 +29,28 @@ steps:
       - go mod download
       - go build -ldflags="-w -s" -o healthcheck
 
+  - name: zip-linux
+    image: alpine
+    depends_on: [ build-linux ]
+    commands:
+      - zip healthcheck.zip healthcheck
+
   - name: upload-linux
     image: plugins/s3
-    depends_on: [ build-linux ]
+    depends_on: [ zip-linux ]
     settings:
       bucket: kloudcover-tools
       acl: public-read
       region: us-west-2
       source: healthcheck
       target: /binaries
+
+  - name: upload-zip
+    image: plugins/s3
+    depends_on: [ zip-linux ]
+    settings:
+      bucket: kloudcover-tools
+      acl: public-read
+      region: us-west-2
+      source: healthcheck.zip
+      target: /zips
