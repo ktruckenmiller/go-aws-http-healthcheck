@@ -31,7 +31,8 @@ func serializeDatum(metricname string, value float64) *cloudwatch.MetricDatum {
 }
 
 
-func LambdaHandler() (int, error) {
+func LambdaHandler() (string, error){
+
   var datums []*cloudwatch.MetricDatum
 	url := os.Getenv("URL")
   region := os.Getenv("REGION")
@@ -85,8 +86,10 @@ func LambdaHandler() (int, error) {
   if err != nil {
 		log.Fatal(err)
 	}
+	return fmt.Sprintf(""), err
 }
 
 func main() {
+	fmt.Printf("boston")
 	lambda.Start(LambdaHandler)
 }
