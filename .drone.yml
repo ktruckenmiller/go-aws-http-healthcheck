@@ -33,6 +33,7 @@ steps:
     image: alpine
     depends_on: [ build-linux ]
     commands:
+      - apk add zip
       - zip healthcheck.zip healthcheck
 
   - name: upload-linux
