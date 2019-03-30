@@ -10,6 +10,7 @@ import (
 	"time"
   "github.com/aws/aws-sdk-go/aws"
   "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-lambda-go/lambda"
   "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/tcnksm/go-httpstat"
 )
@@ -30,7 +31,7 @@ func serializeDatum(metricname string, value float64) *cloudwatch.MetricDatum {
 }
 
 
-func main() {
+func LambdaHandler() (int, error) {
   var datums []*cloudwatch.MetricDatum
 	url := os.Getenv("URL")
   region := os.Getenv("REGION")
@@ -84,4 +85,8 @@ func main() {
   if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	lambda.Start(LambdaHandler)
 }
