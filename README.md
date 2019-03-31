@@ -2,6 +2,27 @@
 
 A small go app for health checking endpoints, and collecting other metrics about the base connectivity.
 
+### Deploy
+
+1. Log in to your AWS console
+
+1. Click [this link](https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/create/review?templateURL=https://s3-us-west-2.amazonaws.com/kloudcover-public-us-west-2-601394826940/healthcheck/stack.yml&stackName=my-health-check&param_ServiceName=google&param_ServiceURL=https://www.google.com&param_Environment=prod) to prepare the stack.
+
+1. Add your specific URL, and your phone number for alerts
+![](img/phone.png)
+
+1. Click the classic IAM button, and click "Create Stack".
+![](img/create_stack.png)
+
+1. Watch all your resources come alive
+![](img/watch_resources.png)
+
+1. Once the stack is done being created, take down the service! Scale to zero, DDOS yourself, do what you do.
+
+1. Wait for that text message.
+![](img/alarm.png)
+
+
 
 ### Rationale
 
@@ -11,7 +32,6 @@ As far as the metrics or a custom scraper for those metrics, I'm considering put
 
 ```
 # reports metrics to cloudwatch  
-wget
 docker run -it --rm -e REGION=us-west-2 -e METRIC_NAME=clustermaestro -e URL="http://my-ip.clustermaestro.com" healthcheck
 
 ```
