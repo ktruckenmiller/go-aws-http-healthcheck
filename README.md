@@ -11,6 +11,7 @@ As far as the metrics or a custom scraper for those metrics, I'm considering put
 
 ```
 # reports metrics to cloudwatch  
+wget
 docker run -it --rm -e REGION=us-west-2 -e METRIC_NAME=clustermaestro -e URL="http://my-ip.clustermaestro.com" healthcheck
 
 ```
@@ -27,12 +28,3 @@ Created in the AWS AppHealth namespace
 | `tcp-connection` | `0 - n` | milliseconds | How long it took for the tcp connection to be established |
 | `tls-handshake` | `0 - n` | milliseconds | How long the tls handshake took to accomplish |
 | `total` | `0 - n` | milliseconds | Total request time with all that stuff above |
-
-
-
-
-
-  - `AppHealth`
-    - `isup: 1 or 0`
-    - `dns: 0ms - 5000ms`
-    -

@@ -36,6 +36,16 @@ steps:
       - apk add zip
       - zip healthcheck.zip healthcheck
 
+  - name: upload-template-us-west-2
+    image: plugins/s3
+    depends_on: [ clone ]
+    settings:
+      bucket: kloudcover-public-us-west-2-601394826940
+      acl: public-read
+      region: us-west-2
+      source: stack.yml
+      target: /healthcheck
+
   - name: upload-linux-us-west-2
     image: plugins/s3
     depends_on: [ zip-linux ]
