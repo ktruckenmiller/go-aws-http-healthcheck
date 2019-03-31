@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    stackname: go-http-healthcheck
+    service_name: my-ip
+    url: https://my-ip.clustermaestro.com
+    environ: prod
+    region: us-west-2
+  tasks:
+    - name: deploy to cloudformation
+      cloudformation:
+        stack_name: "{{stackname}}"
+        region: "{{region}}"
+        template: stack.yml
+        template_parameters:
+          ServiceName: "{{service_name}}"
+          ServiceURL: "{{url}}"
+          Environment: "{{environ}}"
+          PhoneNumber: "16122817914"

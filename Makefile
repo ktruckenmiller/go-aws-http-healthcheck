@@ -23,3 +23,11 @@ build-develop:
 
 build-docker:
 	docker build -t aws_app_health
+
+deploy:
+	docker run -it --rm \
+		-e IAM_ROLE \
+		-v $(shell pwd):/work \
+		-w /work \
+		ktruckenmiller/ansible \
+		ansible-playbook -i ansible_connection=localhost deploy.yml -vvv

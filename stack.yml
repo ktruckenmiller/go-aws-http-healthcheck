@@ -6,13 +6,20 @@ Parameters:
     Default: prod
   ServiceURL:
     Type: String
+  PhoneNumber:
+    Type: String
+    Default: ""
+
+Conditions:
+  HasPhone:
+    Fn::Not: [!Equals [ !Ref PhoneNumber, "" ]]
 
 Resources:
   HealthCheckLambda:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: !Sub kloudcover-public-${AWS::Region}-60139482694
+        S3Bucket: !Sub kloudcover-public-${AWS::Region}-601394826940
         S3Key: binaries/healthcheck.zip
       Environment:
         Variables:
@@ -66,3 +73,31 @@ Resources:
                   - 'cloudwatch:Put*'
                   - 'logs:*'
                 Resource: "*"
+
+  HealthAlertTopic:
+    Type: AWS::SNS::Topic
+
+  AlertSubscription:
+    Condition: HasPhone
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref HealthAlertTopic
+      Protocol: sms
+      Endpoint: !Sub ${PhoneNumber}
+
+  HealthCheckAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Ref HealthAlertTopic
+      AlarmName: !Sub ${ServiceName}-${Environment}-health
+      MetricName: !Sub ${ServiceName}-${Environment}
+      Namespace: AppHealth
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+        - Name: Connection
+          Value: is-up
