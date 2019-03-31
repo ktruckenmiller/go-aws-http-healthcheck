@@ -1,0 +1,68 @@
+Parameters:
+  ServiceName:
+    Type: String
+  Environment:
+    Type: String
+    Default: prod
+  ServiceURL:
+    Type: String
+
+Resources:
+  HealthCheckLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub kloudcover-public-${AWS::Region}-60139482694
+        S3Key: binaries/healthcheck.zip
+      Environment:
+        Variables:
+          REGION: !Sub ${AWS::Region}
+          METRIC_NAME: !Sub ${ServiceName}-${Environment}
+          URL: !Sub ${ServiceURL}
+      Role: !GetAtt HealthCheckLambdaRole.Arn
+      Handler: healthcheck
+      MemorySize: 128
+      Runtime: go1.x
+      Timeout: 20
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt HealthCheckLambda.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt HealthCheckEvent.Arn
+
+  HealthCheckEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      State: ENABLED
+      Description: !Sub ${ServiceName}-${Environment}-healthcheck
+      ScheduleExpression: rate(1 minute)
+      Targets:
+        - Id: !Sub ${ServiceName}-${Environment}-healthcheck
+          Arn: !GetAtt HealthCheckLambda.Arn
+
+  HealthCheckLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: '/'
+      Policies:
+        - PolicyName: "metricput"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - 'cloudwatch:Put*'
+                  - 'logs:*'
+                Resource: "*"

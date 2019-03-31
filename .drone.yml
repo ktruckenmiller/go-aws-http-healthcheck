@@ -36,22 +36,42 @@ steps:
       - apk add zip
       - zip healthcheck.zip healthcheck
 
-  - name: upload-linux
+  - name: upload-linux-us-west-2
     image: plugins/s3
     depends_on: [ zip-linux ]
     settings:
-      bucket: kloudcover-tools
+      bucket: kloudcover-public-us-west-2-601394826940
       acl: public-read
       region: us-west-2
-      source: healthcheck
+      source: healthcheck*
       target: /binaries
 
-  - name: upload-zip
+  - name: upload-linux-us-west-1
     image: plugins/s3
     depends_on: [ zip-linux ]
     settings:
-      bucket: kloudcover-tools
+      bucket: kloudcover-public-us-west-1-601394826940
       acl: public-read
-      region: us-west-2
-      source: healthcheck.zip
-      target: /zips
+      region: us-west-1
+      source: healthcheck*
+      target: /binaries
+
+  - name: upload-linux-us-east-1
+    image: plugins/s3
+    depends_on: [ zip-linux ]
+    settings:
+      bucket: kloudcover-public-us-east-1-601394826940
+      acl: public-read
+      region: us-east-1
+      source: healthcheck*
+      target: /binaries
+
+  - name: upload-linux-us-east-2
+    image: plugins/s3
+    depends_on: [ zip-linux ]
+    settings:
+      bucket: kloudcover-public-us-east-2-601394826940
+      acl: public-read
+      region: us-east-2
+      source: healthcheck*
+      target: /binaries
