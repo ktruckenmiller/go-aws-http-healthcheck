@@ -22,11 +22,12 @@ jobs:
         run: |
           go build -o bin/amd64/bootstrap -v ./...
           GOOS=linux GOARCH=arm64 go build -o bin/arm64/bootstrap -v ./...
-      
+          zip -r bin/amd64/bootstrap.zip bin/amd64/bootstrap
+          zip -r bin/arm64/bootstrap.zip bin/arm64/bootstrap
       # upload to s3
       - name: upload 
         run: |
-          aws s3 cp bin/amd64/bootstrap s3://kloudcover-public-us-west-2-601394826940/healthcheck/amd64/bootstrap
-          aws s3 cp bin/arm64/bootstrap s3://kloudcover-public-us-west-2-601394826940/healthcheck/arm64/bootstrap
+          aws s3 cp bin/amd64/bootstrap.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/amd64/bootstrap.zip
+          aws s3 cp bin/arm64/bootstrap.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/arm64/bootstrap.zip
 
         
