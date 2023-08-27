@@ -31,7 +31,7 @@ jobs:
           cache-to: type=inline
       - name: build artifacts 
         run: |
-          docker run -it --rm \
+          docker run -i --rm \
           -v $(pwd):$(pwd) \
           -w $(pwd) \
           601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
@@ -40,7 +40,7 @@ jobs:
           zip build-arm64.zip bootstrap
           rm bootstrap
 
-          docker run -it --rm \
+          docker run -i --rm \
           -v $(pwd):$(pwd) \
           -w $(pwd) \
           601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
