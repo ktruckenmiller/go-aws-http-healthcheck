@@ -20,14 +20,16 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Sub kloudcover-public-${AWS::Region}-601394826940
-        S3Key: binaries/healthcheck.zip
+        S3Key: healthcheck/bootstrap-arm64.zip
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
           METRIC_NAME: !Sub ${ServiceName}-${Environment}
           URL: !Sub ${ServiceURL}
       Role: !GetAtt HealthCheckLambdaRole.Arn
-      Handler: healthcheck
+      Handler: bootstrap
+      Architectures:
+        - arm64
       MemorySize: 128
       Runtime: provided.al2
       Timeout: 20
@@ -90,7 +92,7 @@ Resources:
       AlarmActions:
         - !Ref HealthAlertTopic
       AlarmName: !Sub ${ServiceName}-${Environment}-health
-      MetricName: !Sub ${ServiceName}-${Environment}
+      MetricName: is-up
       Namespace: AppHealth
       Statistic: Minimum
       Period: 60
@@ -100,5 +102,3 @@ Resources:
       Dimensions:
         - Name: ServiceName
           Value: !Sub ${ServiceName}-${Environment}
-        - Name: Metric name
-          Value: is-up

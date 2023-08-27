@@ -38,9 +38,12 @@ build-docker:
 	docker build -t $(exec_name) .
 
 deploy:
-	docker run -it --rm \
-		-e IAM_ROLE \
-		-v $(shell pwd):/work \
-		-w /work \
-		ktruckenmiller/ansible \
-		ansible-playbook -i ansible_connection=localhost deploy.yml -vvv
+	aws cloudformation deploy \
+		--template-file stack.yml \
+		--stack-name go-http-healthcheck \
+		--capabilities CAPABILITY_IAM \
+		--parameter-overrides \
+			ServiceName=my-ip \
+			ServiceURL=https://my-ip.clustermaestro.com \
+			Environment=prod \
+			PhoneNumber=16122817914
