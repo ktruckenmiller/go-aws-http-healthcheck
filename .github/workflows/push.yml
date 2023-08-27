@@ -26,6 +26,7 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: 601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
           cache-from: type=registry,ref=601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
           cache-to: type=inline
