@@ -1,0 +1,32 @@
+on:
+  push:
+    branches:
+      - master
+      - new-go
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      # setup go
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.21
+
+      # build arm64 and amd64 binaries
+      - name: Build
+        run: |
+          go build -o bin/amd64/bootstrap -v ./...
+          GOOS=linux GOARCH=arm64 go build -o bin/arm64/bootstrap -v ./...
+      
+      # upload to s3
+      - name: upload 
+        run: |
+          aws s3 cp bin/amd64/bootstrap s3://kloudcover-public-us-west-2-601394826940/healthcheck/amd64/bootstrap
+          aws s3 cp bin/arm64/bootstrap s3://kloudcover-public-us-west-2-601394826940/healthcheck/arm64/bootstrap
+
+        

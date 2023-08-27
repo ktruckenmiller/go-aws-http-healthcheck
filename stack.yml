@@ -12,7 +12,7 @@ Parameters:
 
 Conditions:
   HasPhone:
-    Fn::Not: [!Equals [ !Ref PhoneNumber, "" ]]
+    Fn::Not: [!Equals [!Ref PhoneNumber, ""]]
 
 Resources:
   HealthCheckLambda:
@@ -29,7 +29,7 @@ Resources:
       Role: !GetAtt HealthCheckLambdaRole.Arn
       Handler: healthcheck
       MemorySize: 128
-      Runtime: go1.x
+      Runtime: provided.al2
       Timeout: 20
 
   LambdaInvokePermission:
@@ -62,7 +62,7 @@ Resources:
                 - "lambda.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-      Path: '/'
+      Path: "/"
       Policies:
         - PolicyName: "metricput"
           PolicyDocument:
@@ -70,8 +70,7 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - 'cloudwatch:Put*'
-                  - 'logs:*'
+                  - "logs:*"
                 Resource: "*"
 
   HealthAlertTopic:
@@ -99,5 +98,7 @@ Resources:
       Threshold: 1
       ComparisonOperator: LessThanThreshold
       Dimensions:
-        - Name: Connection
+        - Name: ServiceName
+          Value: !Sub ${ServiceName}-${Environment}
+        - Name: Metric name
           Value: is-up

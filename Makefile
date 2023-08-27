@@ -1,10 +1,23 @@
-exec_name=aws_app_health
+exec_name=bootstrap
 
 build-linux:
-	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o $(exec_name) main.go
+	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o $(exec_name) ./...
 
-build-mac:
-	go build -o $(exec_name) main.go
+build-arm64:
+	GOOS=linux GOARCH=arm64 go build -o $(exec_name) ./...
+	chmod +x $(exec_name)
+	zip my-lambda-function.zip $(exec_name)
+
+build-mac: build-develop
+	docker run -it --rm \
+	--platform linux/arm64 \
+	-v ${PWD}:${PWD} \
+	-w ${PWD} \
+	$(exec_name) \
+	go mod download && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build  -ldflags="-w -s" -o $(exec_name) -tags lambda.norpc main.go
+	chmod +x $(exec_name)
+	zip build.zip $(exec_name)
+	rm $(exec_name)
 
 develop: build-develop
 	docker run -it --rm \
@@ -15,14 +28,14 @@ develop: build-develop
 	-e CGO_ENABLED=0 \
 	-e AWS_REGION=us-west-2 \
 	-e IAM_ROLE \
-	aws_app_health sh
+	$(exec_name) sh
 	#URL=https://my-ip.clustermaestro.com REGION=us-east-1 METRIC_NAME=boston go run main.go
 
 build-develop:
-	docker build -t aws_app_health --target BUILDER .
+	docker build -t $(exec_name) --target builder --platform linux/arm64 .
 
 build-docker:
-	docker build -t aws_app_health
+	docker build -t $(exec_name) .
 
 deploy:
 	docker run -it --rm \
