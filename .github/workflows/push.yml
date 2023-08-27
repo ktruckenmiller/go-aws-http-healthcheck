@@ -25,7 +25,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: false
+          push: true
           load: true
           tags: 601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
           cache-from: type=registry,ref=601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
