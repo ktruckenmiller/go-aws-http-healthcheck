@@ -19,32 +19,26 @@ jobs:
           role-to-assume: arn:aws:iam::601394826940:role/${{ github.event.repository.name }}-gha
           role-session-name: gha
           aws-region: us-west-2
-      - uses: aws-actions/amazon-ecr-login@v1
-      - uses: docker/setup-buildx-action@v2
-      - name: Setup build container
-        uses: docker/build-push-action@v4
+      
+      # setup go
+      - name: setup go
+        uses: actions/setup-go@v4
         with:
-          context: .
-          push: true
-          tags: 601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
-          cache-from: type=registry,ref=601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }}
-          cache-to: type=inline
-      - name: build artifacts 
+          go-version: 1.21
+          cache-dependency-path: go.sum
+      - name: test
         run: |
-          docker run -i --rm \
-          -v $(pwd):$(pwd) \
-          -w $(pwd) \
-          601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
-          go mod download && GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
+          go get .
+          go test
+      # build binaries
+      - name: build binaries
+        run: |
+          GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
           chmod +x bootstrap
           zip bootstrap-arm64.zip bootstrap
           rm bootstrap
 
-          docker run -i --rm \
-          -v $(pwd):$(pwd) \
-          -w $(pwd) \
-          601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
-          go mod download && GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
+          GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
           chmod +x bootstrap
           zip bootstrap-amd64.zip bootstrap
           rm bootstrap
