@@ -39,6 +39,7 @@ build-docker:
 
 deploy:
 	aws cloudformation deploy \
+		--role-arn arn:aws:iam::601394826940:role/cdk-hnb659fds-cfn-exec-role-601394826940-us-west-2 \
 		--template-file stack.yml \
 		--stack-name go-http-healthcheck \
 		--capabilities CAPABILITY_IAM \
@@ -46,4 +47,4 @@ deploy:
 			ServiceName=my-ip \
 			ServiceURL=https://my-ip.clustermaestro.com \
 			Environment=prod \
-			PhoneNumber=16122817914
+			PhoneNumber=${PHONE_NUMBER}
