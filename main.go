@@ -41,7 +41,6 @@ func handler() (string, error) {
 		emf.WithLogGroup("lambda-emf-metrics"),
 	).Namespace("AppHealth").Dimension("ServiceName", os.Getenv("METRIC_NAME"))
 	defer m.Log()
-	// datums = append(datums, serializeDatum("is-up", 1))
 
 	if res.StatusCode == 200 {
 		m.MetricAs("is-up", 1, emf.Count)
