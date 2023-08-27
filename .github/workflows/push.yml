@@ -38,7 +38,7 @@ jobs:
           601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
           go mod download && GOOS=linux GOARCH=arm64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
           chmod +x bootstrap
-          zip build-arm64.zip bootstrap
+          zip bootstrap-arm64.zip bootstrap
           rm bootstrap
 
           docker run -i --rm \
@@ -47,7 +47,7 @@ jobs:
           601394826940.dkr.ecr.us-west-2.amazonaws.com/test-ecr:${{ github.event.repository.name }} \
           go mod download && GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bootstrap -tags lambda.norpc main.go
           chmod +x bootstrap
-          zip build-amd64.zip bootstrap
+          zip bootstrap-amd64.zip bootstrap
           rm bootstrap
 
       # upload to s3
