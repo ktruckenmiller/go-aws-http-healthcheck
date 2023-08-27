@@ -12,7 +12,7 @@ Parameters:
 
 Conditions:
   HasPhone:
-    Fn::Not: [!Equals [ !Ref PhoneNumber, "" ]]
+    Fn::Not: [!Equals [!Ref PhoneNumber, ""]]
 
 Resources:
   HealthCheckLambda:
@@ -20,16 +20,18 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Sub kloudcover-public-${AWS::Region}-601394826940
-        S3Key: binaries/healthcheck.zip
+        S3Key: healthcheck/bootstrap-arm64.zip
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
           METRIC_NAME: !Sub ${ServiceName}-${Environment}
           URL: !Sub ${ServiceURL}
       Role: !GetAtt HealthCheckLambdaRole.Arn
-      Handler: healthcheck
+      Handler: bootstrap
+      Architectures:
+        - arm64
       MemorySize: 128
-      Runtime: go1.x
+      Runtime: provided.al2
       Timeout: 20
 
   LambdaInvokePermission:
@@ -62,7 +64,7 @@ Resources:
                 - "lambda.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-      Path: '/'
+      Path: "/"
       Policies:
         - PolicyName: "metricput"
           PolicyDocument:
@@ -70,8 +72,7 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - 'cloudwatch:Put*'
-                  - 'logs:*'
+                  - "logs:*"
                 Resource: "*"
 
   HealthAlertTopic:
@@ -91,7 +92,7 @@ Resources:
       AlarmActions:
         - !Ref HealthAlertTopic
       AlarmName: !Sub ${ServiceName}-${Environment}-health
-      MetricName: !Sub ${ServiceName}-${Environment}
+      MetricName: is-up
       Namespace: AppHealth
       Statistic: Minimum
       Period: 60
@@ -99,5 +100,5 @@ Resources:
       Threshold: 1
       ComparisonOperator: LessThanThreshold
       Dimensions:
-        - Name: Connection
-          Value: is-up
+        - Name: ServiceName
+          Value: !Sub ${ServiceName}-${Environment}

@@ -1,1 +1,4 @@
 *.retry
+bootstrap
+build.zip
+.DS_Store
