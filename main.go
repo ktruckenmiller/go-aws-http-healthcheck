@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -117,6 +118,9 @@ func handler() (string, error) {
 			region = "us-west-2" // default fallback
 		}
 
+		// Log region for debugging
+		log.Printf("Using AWS region: %s", region)
+
 		// Initialize CloudWatch client with explicit region
 		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
@@ -128,9 +132,11 @@ func handler() (string, error) {
 			cfg.Region = region
 		}
 		
-		// Create CloudWatch client with explicit region
+		// Create CloudWatch client with explicit region and endpoint
 		cwClient := cloudwatch.NewFromConfig(cfg, func(o *cloudwatch.Options) {
 			o.Region = region
+			// Manually set the endpoint URL for CloudWatch
+			o.BaseEndpoint = aws.String(fmt.Sprintf("https://monitoring.%s.amazonaws.com", region))
 		})
 
 		_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
@@ -138,8 +144,9 @@ func handler() (string, error) {
 			MetricData: metricData,
 		})
 		if err != nil {
-			log.Fatalf("failed to put metric data: %v", err)
+			log.Fatalf("failed to put metric data (region: %s): %v", region, err)
 		}
+		log.Printf("Successfully sent metrics to CloudWatch namespace: %s", namespace)
 	}
 
 	return "", nil

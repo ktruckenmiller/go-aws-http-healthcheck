@@ -36,6 +36,7 @@ Resources:
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
+          AWS_REGION: !Sub ${AWS::Region}
           METRIC_NAME: !Sub ${ServiceName}-${Environment}
           URL: !Sub ${ServiceURL}
           VERSION: !If [HasVersionSHA, !Ref VersionSHA, '1']
