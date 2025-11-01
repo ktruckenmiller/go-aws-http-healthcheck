@@ -105,21 +105,33 @@ func handler() (string, error) {
 	// Put metrics to CloudWatch
 	// Skip CloudWatch calls in test mode (when AWS credentials aren't configured)
 	if os.Getenv("SKIP_CLOUDWATCH") == "" {
-		// Get region from REGION env var, fallback to AWS_REGION
+		// Get region from REGION env var, fallback to AWS_REGION, then Lambda environment
 		region := os.Getenv("REGION")
 		if region == "" {
 			region = os.Getenv("AWS_REGION")
 		}
 		if region == "" {
+			region = os.Getenv("AWS_DEFAULT_REGION")
+		}
+		if region == "" {
 			region = "us-west-2" // default fallback
 		}
 
-		// Initialize CloudWatch client
+		// Initialize CloudWatch client with explicit region
 		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
 			log.Fatalf("unable to load AWS config: %v", err)
 		}
-		cwClient := cloudwatch.NewFromConfig(cfg)
+		
+		// Ensure region is explicitly set on the config
+		if cfg.Region == "" {
+			cfg.Region = region
+		}
+		
+		// Create CloudWatch client with explicit region
+		cwClient := cloudwatch.NewFromConfig(cfg, func(o *cloudwatch.Options) {
+			o.Region = region
+		})
 
 		_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
 			Namespace:  aws.String(namespace),
