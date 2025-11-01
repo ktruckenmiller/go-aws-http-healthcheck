@@ -9,10 +9,16 @@ Parameters:
   PhoneNumber:
     Type: String
     Default: ""
+  VersionSHA:
+    Type: String
+    Default: ""
+    Description: "Git commit SHA or version identifier for the Lambda code"
 
 Conditions:
   HasPhone:
     Fn::Not: [!Equals [!Ref PhoneNumber, ""]]
+  HasVersionSHA:
+    Fn::Not: [!Equals [!Ref VersionSHA, ""]]
 
 Resources:
   HealthCheckLambda:
@@ -20,12 +26,19 @@ Resources:
     Properties:
       Code:
         S3Bucket: !Sub kloudcover-public-${AWS::Region}-601394826940
-        S3Key: healthcheck/bootstrap-arm64.zip
+        S3Key: !If 
+          - HasVersionSHA
+          - !Sub healthcheck/bootstrap-arm64-${VersionSHA}.zip
+          - healthcheck/bootstrap-arm64.zip
+      Description: !Sub 
+        - "${ServiceName}-${Environment}-healthcheck${Suffix}"
+        - Suffix: !If [HasVersionSHA, !Sub " - Version: ${VersionSHA}", ""]
       Environment:
         Variables:
           REGION: !Sub ${AWS::Region}
           METRIC_NAME: !Sub ${ServiceName}-${Environment}
           URL: !Sub ${ServiceURL}
+          VERSION: !If [HasVersionSHA, !Ref VersionSHA, '1']
       Role: !GetAtt HealthCheckLambdaRole.Arn
       Handler: bootstrap
       Architectures:
@@ -65,14 +78,15 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
-        - PolicyName: "metricput"
+        - PolicyName: "CloudWatchMetrics"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
                 Action:
-                  - "logs:*"
                   - "cloudwatch:PutMetricData"
                 Resource: "*"
 

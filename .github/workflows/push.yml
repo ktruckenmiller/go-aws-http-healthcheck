@@ -13,13 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       # setup go
-      - name: login to aws 
+      - name: login to aws
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::601394826940:role/${{ github.event.repository.name }}-gha
           role-session-name: gha
           aws-region: us-west-2
-      
+
       # setup go
       - name: setup go
         uses: actions/setup-go@v4
@@ -43,10 +43,20 @@ jobs:
           zip bootstrap-amd64.zip bootstrap
           rm bootstrap
 
-      # upload to s3
-      - name: upload 
+      # compute version SHA
+      - name: compute version SHA
+        id: version
         run: |
+          VERSION_SHA=$(git rev-parse --short HEAD)
+          echo "sha=$VERSION_SHA" >> $GITHUB_OUTPUT
+          echo "Version SHA: $VERSION_SHA"
+
+      # upload to s3
+      - name: upload
+        run: |
+          aws s3 cp bootstrap-amd64.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/bootstrap-amd64-${{ steps.version.outputs.sha }}.zip
+          aws s3 cp bootstrap-arm64.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/bootstrap-arm64-${{ steps.version.outputs.sha }}.zip
+          # Also upload as latest for convenience
           aws s3 cp bootstrap-amd64.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/bootstrap-amd64.zip
           aws s3 cp bootstrap-arm64.zip s3://kloudcover-public-us-west-2-601394826940/healthcheck/bootstrap-arm64.zip
-
-        
+          echo "Uploaded with version SHA: ${{ steps.version.outputs.sha }}"
