@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -106,35 +105,20 @@ func handler() (string, error) {
 	// Put metrics to CloudWatch
 	// Skip CloudWatch calls in test mode (when AWS credentials aren't configured)
 	if os.Getenv("SKIP_CLOUDWATCH") == "" {
-		// Get region from REGION env var, fallback to AWS_REGION, then Lambda environment
-		region := os.Getenv("REGION")
-		// Log region for debugging
-		log.Printf("Using AWS region: %s", region)
-
-		// Initialize CloudWatch client with explicit region
-		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		// Initialize CloudWatch client with default configuration
+		cfg, err := config.LoadDefaultConfig(ctx)
 		if err != nil {
 			log.Fatalf("unable to load AWS config: %v", err)
 		}
 
-		// Ensure region is explicitly set on the config
-		if cfg.Region == "" {
-			cfg.Region = region
-		}
-
-		// Create CloudWatch client with explicit region and endpoint
-		cwClient := cloudwatch.NewFromConfig(cfg, func(o *cloudwatch.Options) {
-			o.Region = region
-			// Manually set the endpoint URL for CloudWatch
-			o.BaseEndpoint = aws.String(fmt.Sprintf("https://monitoring.%s.amazonaws.com", region))
-		})
+		cwClient := cloudwatch.NewFromConfig(cfg)
 
 		_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
 			Namespace:  aws.String(namespace),
 			MetricData: metricData,
 		})
 		if err != nil {
-			log.Fatalf("failed to put metric data (region: %s): %v", region, err)
+			log.Fatalf("failed to put metric data: %v", err)
 		}
 		log.Printf("Successfully sent metrics to CloudWatch namespace: %s", namespace)
 	}
