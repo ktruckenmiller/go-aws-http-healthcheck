@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
@@ -8,17 +9,27 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/prozz/aws-embedded-metrics-golang/emf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/tcnksm/go-httpstat"
 )
 
 func handler() (string, error) {
+	ctx := context.Background()
+
+	// Initialize CloudWatch client
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(os.Getenv("REGION")))
+	if err != nil {
+		log.Fatalf("unable to load AWS config: %v", err)
+	}
+	cwClient := cloudwatch.NewFromConfig(cfg)
 
 	url := os.Getenv("URL")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Fatal(err)
-
 	}
 
 	var result httpstat.Result
@@ -37,20 +48,74 @@ func handler() (string, error) {
 	res.Body.Close()
 	result.End(time.Now())
 
-	m := emf.New(
-		emf.WithLogGroup("lambda-emf-metrics"),
-	).Namespace("AppHealth").Dimension("ServiceName", os.Getenv("METRIC_NAME"))
-	defer m.Log()
+	metricName := os.Getenv("METRIC_NAME")
+	namespace := "AppHealth"
+	dimension := types.Dimension{
+		Name:  aws.String("ServiceName"),
+		Value: aws.String(metricName),
+	}
+
+	// Prepare metric data
+	var metricData []types.MetricDatum
 
 	if res.StatusCode == 200 {
-		m.MetricAs("is-up", 1, emf.Count)
-		m.MetricAs("dns-lookup", int(result.DNSLookup/time.Millisecond), emf.Milliseconds)
-		m.MetricAs("tcp-connection", int(result.TCPConnection/time.Millisecond), emf.Milliseconds)
-		m.MetricAs("tls-handshake", int(result.TLSHandshake/time.Millisecond), emf.Milliseconds)
-		m.MetricAs("server-processing", int(result.ServerProcessing/time.Millisecond), emf.Milliseconds)
-		m.MetricAs("total", int(result.Total(time.Now())/time.Millisecond), emf.Milliseconds)
+		totalDuration := int(result.Total(time.Now()) / time.Millisecond)
+		metricData = []types.MetricDatum{
+			{
+				MetricName: aws.String("is-up"),
+				Value:      aws.Float64(1),
+				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{dimension},
+			},
+			{
+				MetricName: aws.String("dns-lookup"),
+				Value:      aws.Float64(float64(result.DNSLookup / time.Millisecond)),
+				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{dimension},
+			},
+			{
+				MetricName: aws.String("tcp-connection"),
+				Value:      aws.Float64(float64(result.TCPConnection / time.Millisecond)),
+				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{dimension},
+			},
+			{
+				MetricName: aws.String("tls-handshake"),
+				Value:      aws.Float64(float64(result.TLSHandshake / time.Millisecond)),
+				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{dimension},
+			},
+			{
+				MetricName: aws.String("server-processing"),
+				Value:      aws.Float64(float64(result.ServerProcessing / time.Millisecond)),
+				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{dimension},
+			},
+			{
+				MetricName: aws.String("total"),
+				Value:      aws.Float64(float64(totalDuration)),
+				Unit:       types.StandardUnitMilliseconds,
+				Dimensions: []types.Dimension{dimension},
+			},
+		}
 	} else {
-		m.MetricAs("is-up", 0, emf.Count)
+		metricData = []types.MetricDatum{
+			{
+				MetricName: aws.String("is-up"),
+				Value:      aws.Float64(0),
+				Unit:       types.StandardUnitCount,
+				Dimensions: []types.Dimension{dimension},
+			},
+		}
+	}
+
+	// Put metrics to CloudWatch
+	_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
+		Namespace:  aws.String(namespace),
+		MetricData: metricData,
+	})
+	if err != nil {
+		log.Fatalf("failed to put metric data: %v", err)
 	}
 
 	return "", nil
