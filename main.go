@@ -19,13 +19,6 @@ import (
 func handler() (string, error) {
 	ctx := context.Background()
 
-	// Initialize CloudWatch client
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(os.Getenv("REGION")))
-	if err != nil {
-		log.Fatalf("unable to load AWS config: %v", err)
-	}
-	cwClient := cloudwatch.NewFromConfig(cfg)
-
 	url := os.Getenv("URL")
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -110,12 +103,31 @@ func handler() (string, error) {
 	}
 
 	// Put metrics to CloudWatch
-	_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
-		Namespace:  aws.String(namespace),
-		MetricData: metricData,
-	})
-	if err != nil {
-		log.Fatalf("failed to put metric data: %v", err)
+	// Skip CloudWatch calls in test mode (when AWS credentials aren't configured)
+	if os.Getenv("SKIP_CLOUDWATCH") == "" {
+		// Get region from REGION env var, fallback to AWS_REGION
+		region := os.Getenv("REGION")
+		if region == "" {
+			region = os.Getenv("AWS_REGION")
+		}
+		if region == "" {
+			region = "us-west-2" // default fallback
+		}
+
+		// Initialize CloudWatch client
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		if err != nil {
+			log.Fatalf("unable to load AWS config: %v", err)
+		}
+		cwClient := cloudwatch.NewFromConfig(cfg)
+
+		_, err = cwClient.PutMetricData(ctx, &cloudwatch.PutMetricDataInput{
+			Namespace:  aws.String(namespace),
+			MetricData: metricData,
+		})
+		if err != nil {
+			log.Fatalf("failed to put metric data: %v", err)
+		}
 	}
 
 	return "", nil
