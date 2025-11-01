@@ -3,6 +3,14 @@ exec_name=bootstrap
 # Get version SHA from git, fallback to timestamp if not in git repo
 VERSION_SHA := $(shell git rev-parse --short HEAD 2>/dev/null || echo $(shell date +%s))
 
+test-local:
+	@echo "Running local test (skipping CloudWatch)..."
+	@SKIP_CLOUDWATCH=true URL=https://www.google.com METRIC_NAME=test-local REGION=us-west-2 go run main.go
+
+test-local-with-cloudwatch:
+	@echo "Running local test (sending to CloudWatch)..."
+	@URL=https://www.google.com METRIC_NAME=test-local REGION=us-west-2 go run main.go
+
 build-linux:
 	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o $(exec_name) ./...
 

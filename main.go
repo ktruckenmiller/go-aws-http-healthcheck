@@ -105,8 +105,17 @@ func handler() (string, error) {
 	// Put metrics to CloudWatch
 	// Skip CloudWatch calls in test mode (when AWS credentials aren't configured)
 	if os.Getenv("SKIP_CLOUDWATCH") == "" {
-		// Initialize CloudWatch client with default configuration
-		cfg, err := config.LoadDefaultConfig(ctx)
+		// Get region from environment variables
+		region := os.Getenv("REGION")
+		if region == "" {
+			region = os.Getenv("AWS_REGION")
+		}
+		if region == "" {
+			region = "us-west-2" // default fallback
+		}
+
+		// Initialize CloudWatch client with explicit region
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 		if err != nil {
 			log.Fatalf("unable to load AWS config: %v", err)
 		}
@@ -127,5 +136,14 @@ func handler() (string, error) {
 }
 
 func main() {
-	lambda.Start(handler)
+	// Check if running in Lambda environment
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		lambda.Start(handler)
+	} else {
+		// Run locally for testing
+		_, err := handler()
+		if err != nil {
+			log.Fatalf("handler failed: %v", err)
+		}
+	}
 }
